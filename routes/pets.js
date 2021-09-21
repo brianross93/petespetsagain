@@ -1,4 +1,5 @@
 // MODELS
+const pet = require('../models/pet');
 const Pet = require('../models/pet');
 
 // PET ROUTES
@@ -51,24 +52,58 @@ module.exports = (app) => {
       });
   });
 
-      
-    // SEARCH PET
-    app.get('/search', (req, res) => {
+  // PURCHASE
+// PURCHASE
+app.post('/pets/:id/purchase', (req, res) => {
+  console.log(req.body);
+  // import secret key here, dont tell anyone
+  var stripe = require("stripe")(process.env.PRIVATE_STRIPE_API_KEY);
 
-      const term = new RegExp(req.query.term, 'i')
+  // Token is created using Checkout or Elements!
+  // Get the payment token ID submitted by the form:
+  const token = req.body.stripeToken; // Using Express
 
-      const page = req.query.page || 1
-      Pet.paginate(
-        {
-          $or: [
-            { 'name': term },
-            { 'species': term }
-          ]
-        },
-        { page: page }).then((results) => {
-          res.render('pets-index', { pets: results.docs, pagesCount: results.pages, currentPage: page });
-        });
+  // req.body.petId can become null through seeding,
+  // this way we'll ensure we use a non-null value
+  let petId = req.body.petId || req.params.id;
+
+  Pet.findById(petId).exec((err, pet)=> {
+    if (err) {
+      console.log('Error: ' + err);
+      res.redirect(`/pets/${req.params.id}`);
+    }
+    const charge = stripe.charges.create({
+      amount: pet.price * 100,
+      currency: 'usd',
+      description: `Purchased ${pet.name}, ${pet.species}`,
+      source: token,
+    }).then((chg) => {
+      res.redirect(`/pets/${req.params.id}`);
+    })
+    .catch(err => {
+      console.log('Error:' + err);
     });
+  })
+});
+
+      
+  // SEARCH PET
+  app.get('/search', (req, res) => {
+
+    const term = new RegExp(req.query.term, 'i')
+
+    const page = req.query.page || 1
+    Pet.paginate(
+      {
+        $or: [
+          { 'name': term },
+          { 'species': term }
+        ]
+      },
+      { page: page }).then((results) => {
+        res.render('pets-index', { pets: results.docs, pagesCount: results.pages, currentPage: page });
+      });
+  });
 
   // DELETE PET
   app.delete('/pets/:id', (req, res) => {

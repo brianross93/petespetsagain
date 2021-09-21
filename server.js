@@ -11,6 +11,8 @@ const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const methodOverride = require('method-override')
 
+
+
 const app = express();
 
 const mongoose = require('mongoose');
@@ -36,6 +38,8 @@ app.use(logger('dev'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cookieParser());
+// server.js
+app.locals.PUBLIC_STRIPE_API_KEY = process.env.PUBLIC_STRIPE_API_KEY
 
 
 require('./routes/index.js')(app);
