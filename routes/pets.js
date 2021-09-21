@@ -13,7 +13,7 @@ module.exports = (app) => {
     res.render('pets-new');
   });
 
- // pets.js
+
   // CREATE PET
   app.post('/pets', (req, res) => {
     var pet = new Pet(req.body);
@@ -95,23 +95,25 @@ module.exports = (app) => {
   });
 
       
-  // SEARCH PET
-  app.get('/search', (req, res) => {
+  // SEARCH 4 Pet
+app.get('/search', function (req, res) {
+  Pet
+      .find(
+          { $text : { $search : req.query.term } },
+          { score : { $meta: "textScore" } }
+      )
+      .sort({ score : { $meta : 'textScore' } })
+      .limit(20)
+      .exec(function(err, pets) {
+        if (err) { return res.status(400).send(err) }
 
-    const term = new RegExp(req.query.term, 'i')
-
-    const page = req.query.page || 1
-    Pet.paginate(
-      {
-        $or: [
-          { 'name': term },
-          { 'species': term }
-        ]
-      },
-      { page: page }).then((results) => {
-        res.render('pets-index', { pets: results.docs, pagesCount: results.pages, currentPage: page });
+        if (req.header('Content-Type') == 'application/json') {
+          return res.json({ pets: pets });
+        } else {
+          return res.render('pets-index', { pets: pets, term: req.query.term });
+        }
       });
-  });
+});
 
   // DELETE PET
   app.delete('/pets/:id', (req, res) => {

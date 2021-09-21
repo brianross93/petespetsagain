@@ -10,8 +10,7 @@ const logger = require('morgan');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const methodOverride = require('method-override')
-const nodemailer = require('nodemailer');
-const mg = require('nodemailer-mailgun-transport');
+
 
 
 
@@ -26,16 +25,7 @@ mongoose.connect('mongodb://localhost/local', {
   useFindAndModify: false
 });
 
-// auth with our mailgun API key and domain
-const auth = {
-  auth: {
-    api_key: process.env.MAILGUN_API_KEY,
-    domain: process.env.EMAIL_DOMAIN
-  }
-}
 
-// create a mailer
-const nodemailerMailgun = nodemailer.createTransport(mg(auth));
 
 // SEND EMAIL
 const user = {
